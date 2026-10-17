@@ -1,0 +1,756 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мій чат</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+        }
+
+        button, input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .auth {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .box {
+            width: 100%;
+            max-width: 400px;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 18px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 10px;
+        }
+
+        .description {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .tabs button {
+            flex: 1;
+            padding: 12px;
+            border: 0;
+            border-radius: 8px;
+            background: #334155;
+            color: white;
+        }
+
+        .tabs button.active {
+            background: #3b82f6;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            margin-bottom: 15px;
+            border-radius: 9px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #3b82f6;
+        }
+
+        .main-btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 9px;
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+        }
+
+        .main-btn:hover {
+            background: #2563eb;
+        }
+
+        .error {
+            margin-top: 15px;
+            padding: 12px;
+            background: #7f1d1d;
+            border-radius: 8px;
+            color: #fecaca;
+            display: none;
+            overflow-wrap: anywhere;
+        }
+
+        #chat {
+            display: none;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #1e293b;
+            padding: 18px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .header h2 {
+            margin: 0;
+        }
+
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .username {
+            color: #60a5fa;
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        .logout {
+            border: none;
+            background: #ef4444;
+            color: white;
+            padding: 9px 14px;
+            border-radius: 8px;
+        }
+
+        .messages {
+            height: 65vh;
+            min-height: 250px;
+            overflow-y: auto;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            background: #334155;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        .message-user {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+
+        .message-date {
+            float: right;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .message-text {
+            margin-top: 8px;
+            white-space: pre-wrap;
+        }
+
+        .send {
+            display: flex;
+            gap: 10px;
+        }
+
+        .send input {
+            margin: 0;
+            min-width: 0;
+        }
+
+        .send button {
+            border: none;
+            background: #3b82f6;
+            color: white;
+            padding: 0 20px;
+            border-radius: 9px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px;
+            }
+
+            .header {
+                align-items: flex-start;
+            }
+
+            .user {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 7px;
+            }
+
+            .message-date {
+                float: none;
+                display: block;
+                margin: 5px 0 0;
+            }
+
+            .send button {
+                padding: 0 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="auth" class="auth">
+        <div class="box">
+            <h1>💬 Чат</h1>
+
+            <div class="description">
+                Спілкуйся з іншими користувачами
+            </div>
+
+            <div class="tabs">
+                <button id="loginTab" class="active" type="button">
+                    Вхід
+                </button>
+
+                <button id="registerTab" type="button">
+                    Реєстрація
+                </button>
+            </div>
+
+            <form id="loginForm">
+                <input
+                    id="loginUsername"
+                    type="text"
+                    placeholder="Нік"
+                    autocomplete="username"
+                    minlength="3"
+                    maxlength="30"
+                    required
+                >
+
+                <input
+                    id="loginPassword"
+                    type="password"
+                    placeholder="Пароль"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button class="main-btn" type="submit">
+                    Увійти
+                </button>
+            </form>
+
+            <form id="registerForm" style="display:none">
+                <input
+                    id="registerUsername"
+                    type="text"
+                    placeholder="Придумай нік"
+                    autocomplete="username"
+                    minlength="3"
+                    maxlength="30"
+                    required
+                >
+
+                <input
+                    id="registerPassword"
+                    type="password"
+                    placeholder="Придумай пароль"
+                    autocomplete="new-password"
+                    minlength="6"
+                    required
+                >
+
+                <button class="main-btn" type="submit">
+                    Зареєструватися
+                </button>
+            </form>
+
+            <div id="error" class="error" role="alert"></div>
+        </div>
+    </div>
+
+    <div id="chat">
+        <div class="container">
+            <div class="header">
+                <h2>💬 Чат</h2>
+
+                <div class="user">
+                    <span id="currentUsername" class="username"></span>
+
+                    <button id="logoutButton" class="logout" type="button">
+                        Вийти
+                    </button>
+                </div>
+            </div>
+
+            <div id="messages" class="messages" aria-live="polite"></div>
+
+            <form id="sendForm" class="send">
+                <input
+                    id="messageInput"
+                    type="text"
+                    maxlength="1000"
+                    placeholder="Напиши повідомлення..."
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit" aria-label="Надіслати">
+                    ➤
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        "use strict";
+
+        // СТАН
+
+        let token = localStorage.getItem("token");
+        let currentUser = null;
+        let refreshInterval = null;
+        let isSending = false;
+        let isLoadingMessages = false;
+        let lastMessagesSignature = "";
+
+        try {
+            currentUser = JSON.parse(
+                localStorage.getItem("user") || "null"
+            );
+        } catch {
+            clearSavedSession();
+        }
+
+        if (
+            !currentUser ||
+            typeof currentUser.username !== "string" ||
+            !token
+        ) {
+            clearSavedSession();
+        }
+
+        // DOM
+
+        const auth = document.getElementById("auth");
+        const chat = document.getElementById("chat");
+
+        const loginForm = document.getElementById("loginForm");
+        const registerForm = document.getElementById("registerForm");
+        const sendForm = document.getElementById("sendForm");
+
+        const loginTab = document.getElementById("loginTab");
+        const registerTab = document.getElementById("registerTab");
+
+        const errorBox = document.getElementById("error");
+        const usernameLabel = document.getElementById("currentUsername");
+        const messagesBox = document.getElementById("messages");
+        const messageInput = document.getElementById("messageInput");
+
+        // СЕСІЯ
+
+        function clearSavedSession() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            token = null;
+            currentUser = null;
+        }
+
+        function saveSession(data) {
+            if (
+                !data ||
+                typeof data.token !== "string" ||
+                !data.user ||
+                typeof data.user.username !== "string"
+            ) {
+                throw new Error("Сервер повернув неправильні дані");
+            }
+
+            token = data.token;
+            currentUser = data.user;
+
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", JSON.stringify(currentUser));
+
+            openChat();
+        }
+
+        // API
+
+        async function api(url, options = {}) {
+            const headers = {
+                ...(options.body ? {
+                    "Content-Type": "application/json"
+                } : {}),
+                ...(token ? {
+                    "Authorization": "Bearer " + token
+                } : {}),
+                ...options.headers
+            };
+
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+
+            let data;
+
+            try {
+                data = await response.json();
+            } catch {
+                data = {};
+            }
+
+            if (!response.ok) {
+                const error = new Error(
+                    data.error || "Помилка сервера: " + response.status
+                );
+
+                error.status = response.status;
+                throw error;
+            }
+
+            return data;
+        }
+
+        // ПОВІДОМЛЕННЯ ПРО ПОМИЛКИ
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.style.display = "block";
+        }
+
+        function clearError() {
+            errorBox.textContent = "";
+            errorBox.style.display = "none";
+        }
+
+        // ВКЛАДКИ
+
+        function showLogin() {
+            loginForm.style.display = "block";
+            registerForm.style.display = "none";
+
+            loginTab.classList.add("active");
+            registerTab.classList.remove("active");
+
+            clearError();
+        }
+
+        function showRegister() {
+            loginForm.style.display = "none";
+            registerForm.style.display = "block";
+
+            loginTab.classList.remove("active");
+            registerTab.classList.add("active");
+
+            clearError();
+        }
+
+        loginTab.addEventListener("click", showLogin);
+        registerTab.addEventListener("click", showRegister);
+
+        // РЕЄСТРАЦІЯ
+
+        registerForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            clearError();
+
+            const button = registerForm.querySelector("button");
+            button.disabled = true;
+
+            const username = document
+                .getElementById("registerUsername")
+                .value.trim();
+
+            const password = document
+                .getElementById("registerPassword")
+                .value;
+
+            try {
+                const data = await api("/register", {
+                    method: "POST",
+                    body: JSON.stringify({ username, password })
+                });
+
+                saveSession(data);
+                registerForm.reset();
+
+            } catch (error) {
+                console.error("REGISTER ERROR:", error);
+                showError(error.message || "Помилка реєстрації");
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        // ВХІД
+
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            clearError();
+
+            const button = loginForm.querySelector("button");
+            button.disabled = true;
+
+            const username = document
+                .getElementById("loginUsername")
+                .value.trim();
+
+            const password = document
+                .getElementById("loginPassword")
+                .value;
+
+            try {
+                const data = await api("/login", {
+                    method: "POST",
+                    body: JSON.stringify({ username, password })
+                });
+
+                saveSession(data);
+                loginForm.reset();
+
+            } catch (error) {
+                console.error("LOGIN ERROR:", error);
+                showError(error.message || "Помилка входу");
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        // ВІДКРИТТЯ ЧАТУ
+
+        function openChat() {
+            if (!token || !currentUser) {
+                logout();
+                return;
+            }
+
+            auth.style.display = "none";
+            chat.style.display = "block";
+
+            usernameLabel.textContent = currentUser.username;
+
+            clearError();
+            loadMessages();
+
+            if (refreshInterval !== null) {
+                clearInterval(refreshInterval);
+            }
+
+            refreshInterval = setInterval(() => {
+                if (token) {
+                    loadMessages();
+                }
+            }, 3000);
+        }
+
+        // ЗАВАНТАЖЕННЯ ПОВІДОМЛЕНЬ
+
+        async function loadMessages() {
+            if (!token || isLoadingMessages) {
+                return;
+            }
+
+            isLoadingMessages = true;
+
+            try {
+                const messages = await api("/messages");
+
+                if (!Array.isArray(messages) || !token) {
+                    return;
+                }
+
+                // Не перемальовуємо чат, якщо нічого не змінилося.
+                const signature = JSON.stringify(messages);
+
+                if (signature === lastMessagesSignature) {
+                    return;
+                }
+
+                const wasAtBottom =
+                    messagesBox.scrollHeight -
+                    messagesBox.scrollTop -
+                    messagesBox.clientHeight < 80;
+
+                const fragment = document.createDocumentFragment();
+
+                for (const message of messages) {
+                    const item = document.createElement("div");
+                    item.className = "message";
+
+                    const header = document.createElement("div");
+
+                    const user = document.createElement("span");
+                    user.className = "message-user";
+                    user.textContent = message.username || "Користувач";
+
+                    const date = document.createElement("span");
+                    date.className = "message-date";
+
+                    const parsedDate = new Date(message.created_at);
+
+                    date.textContent = Number.isNaN(parsedDate.getTime())
+                        ? ""
+                        : parsedDate.toLocaleString("uk-UA");
+
+                    header.append(user, date);
+
+                    const text = document.createElement("div");
+                    text.className = "message-text";
+                    text.textContent = message.message || "";
+
+                    item.append(header, text);
+                    fragment.appendChild(item);
+                }
+
+                messagesBox.replaceChildren(fragment);
+                lastMessagesSignature = signature;
+
+                if (wasAtBottom) {
+                    messagesBox.scrollTop = messagesBox.scrollHeight;
+                }
+
+            } catch (error) {
+                if (error.status === 401) {
+                    logout();
+                    return;
+                }
+
+                console.error("LOAD MESSAGES ERROR:", error);
+            } finally {
+                isLoadingMessages = false;
+            }
+        }
+
+        // НАДСИЛАННЯ ПОВІДОМЛЕННЯ
+
+        sendForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            if (isSending || !token) {
+                return;
+            }
+
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            isSending = true;
+
+            const button = sendForm.querySelector("button");
+            button.disabled = true;
+
+            try {
+                await api("/messages", {
+                    method: "POST",
+                    body: JSON.stringify({ message })
+                });
+
+                messageInput.value = "";
+                await loadMessages();
+                messageInput.focus();
+
+            } catch (error) {
+                if (error.status === 401) {
+                    logout();
+                    return;
+                }
+
+                console.error("SEND MESSAGE ERROR:", error);
+                alert(error.message || "Не вдалося відправити повідомлення");
+
+            } finally {
+                isSending = false;
+                button.disabled = false;
+            }
+        });
+
+        // ВИХІД
+
+        function logout() {
+            if (refreshInterval !== null) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+
+            clearSavedSession();
+
+            lastMessagesSignature = "";
+            isLoadingMessages = false;
+            isSending = false;
+
+            messagesBox.replaceChildren();
+
+            auth.style.display = "flex";
+            chat.style.display = "none";
+
+            loginForm.reset();
+            registerForm.reset();
+            sendForm.reset();
+
+            showLogin();
+        }
+
+        document
+            .getElementById("logoutButton")
+            .addEventListener("click", logout);
+
+        // АВТОВХІД
+
+        if (token && currentUser) {
+            openChat();
+        } else {
+            showLogin();
+        }
+    </script>
+</body>
+</html>
